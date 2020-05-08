@@ -1,5 +1,6 @@
 const MongoClient = require ('mongodb').MongoClient; // it enable us to connect with mongodb
-const assert = require ('assert'); //
+const assert = require ('assert'); 
+const dboper = require('./operations');//
 
 //to start a connection with mongodb server we create a const name url
 // which is the url where mongodb server can be access
@@ -20,35 +21,33 @@ and second para will be a call back function is has two parameter
     console.log('connected correctly to the server') // if there will not be error the this will get printed on the screen
     const db = client.db(dbname); // to connect to the database
     
-    
-    
- const collection = db.collection('dishes') // try to access dishes collection within the db
- 
- 
- 
-    collection.insertOne ({"name": "Uthappizza" , "description": "test"},(err, result)=>{
-    assert.equal(err, null);
-
-       console.log('After Insert:\n');
-       console.log(result.ops);   // it will tell how many operations are carried out
-
-
-       collection.find({}).toArray((err , docs)=>{ // will search everything that will be in the colection
-       assert.equal(err ,null);
-        
-       console.log('Found:\n');
-       console.log(docs); // will return all thecritersi which u were asked for
-        
-
-        db.dropCollection('dishes' ,(err ,result)=>{ // will drop the specified collection here
-        assert.equal(err,null);
-
-        client.close(); // to close thr db
-
-         });   
+    dboper.insertDocument(db,{name: "Vadonut",description: 'Test'},'dishes',(result)=> {
        
-     });
+        console.log('INSERT DOCUMENTS:\n',result.ops);
 
-  });
 
+        dboper.findDocuments(db,'dishes',(docs)=>{
+            console.log('FOUND DOCUMENTS:\n',docs);
+
+
+            dboper.updateDocument(db, {name: 'Vadonut'},{description: 'Updated Test'},'dishes',(result) =>{
+             
+                
+                console.log('UPDATED DOCUMENTS:\n',result.result);
+                dboper.findDocuments(db,'dishes',(docs)=>{
+                    console.log('FOUND DOCUMENTS:\n',docs);
+
+                    db.dropCollection('dishes',(result)=>{
+                        console.log('DROPPED COLLECTION:',result);
+                        client.close();
+                    });
+                
+                });
+        
+                
+            });
+         });
+    });
+
+   
 });
