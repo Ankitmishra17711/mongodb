@@ -1,3 +1,5 @@
+
+
 const MongoClient = require ('mongodb').MongoClient; // it enable us to connect with mongodb
 const assert = require ('assert'); 
 const dboper = require('./operations');//
@@ -6,48 +8,47 @@ const dboper = require('./operations');//
 // which is the url where mongodb server can be access
 
 const url = 'mongodb://localhost:27017';// 27017 is a port number in which mongodb server wil run
-const dbname = 'conFusion'; // we created the db earlier and we will acess that
-
-/* to access the server(connect method will do this)
-this takes url as the first parameter 
-and second para will be a call back function is has two parameter 
-(error value and client which we use to  connect to our db  and will perform various operations ) */
+const dbname = 'conFusion';
 
 
-   MongoClient.connect(url,(err,client)=>{ // callback function
-
-    assert.equal(err , null); // assert will allow to perfrom various checks(will check the error)
-    
-    console.log('connected correctly to the server') // if there will not be error the this will get printed on the screen
-    const db = client.db(dbname); // to connect to the database
-    
-    dboper.insertDocument(db,{name: "Vadonut",description: 'Test'},'dishes',(result)=> {
-       
-        console.log('INSERT DOCUMENTS:\n',result.ops);
 
 
-        dboper.findDocuments(db,'dishes',(docs)=>{
-            console.log('FOUND DOCUMENTS:\n',docs);
 
+MongoClient.connect(url).then((client) => {
 
-            dboper.updateDocument(db, {name: 'Vadonut'},{description: 'Updated Test'},'dishes',(result) =>{
-             
-                
-                console.log('UPDATED DOCUMENTS:\n',result.result);
-                dboper.findDocuments(db,'dishes',(docs)=>{
-                    console.log('FOUND DOCUMENTS:\n',docs);
+    console.log('Connected correctly to server');
+    const db = client.db(dbname);
 
-                    db.dropCollection('dishes',(result)=>{
-                        console.log('DROPPED COLLECTION:',result);
-                        client.close();
-                    });
-                
-                });
-        
-                
-            });
-         });
-    });
+    dboper.insertDocument(db, { name: "Vadonut", description: "Test"},
+        "dishes")
+        .then((result) => {
+            console.log("Insert Document:\n", result.ops);
 
-   
-});
+            return dboper.findDocuments(db, "dishes");
+        })
+        .then((docs) => {
+            console.log("Found Documents:\n", docs);
+
+            return dboper.updateDocument(db, { name: "Vadonut" },
+                    { description: "Updated Test" }, "dishes");
+
+        })
+        .then((result) => {
+            console.log("Updated Document:\n", result.result);
+
+            return dboper.findDocuments(db, "dishes");
+        })
+        .then((docs) => {
+            console.log("Found Updated Documents:\n", docs);
+                            
+            return db.dropCollection("dishes");
+        })
+        .then((result) => {
+            console.log("Dropped Collection: ", result);
+
+            return client.close();
+        })
+        .catch((err) => console.log(err));
+
+})
+.catch((err) => console.log(err));
